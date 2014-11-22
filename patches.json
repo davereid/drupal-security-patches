@@ -2,6 +2,10 @@
   "name": "drupal",
   "patches": [
     {
+      "patch": "SA-CORE-2014-004.patch",
+      "version": "7.31"
+    },
+    {
       "patch": "SA-CORE-2014-005.patch",
       "version": "7.32"
     },
