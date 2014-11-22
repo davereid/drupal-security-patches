@@ -1,0 +1,37 @@
+diff --git a/includes/password.inc b/includes/password.inc
+index 3d5a400..8228e61 100644
+--- a/includes/password.inc
++++ b/includes/password.inc
+@@ -140,7 +140,7 @@ function _password_enforce_log2_boundaries($count_log2) {
+  * @param $algo
+  *   The string name of a hashing algorithm usable by hash(), like 'sha256'.
+  * @param $password
+- *   The plain-text password to hash.
++ *   Plain-text password up to 512 bytes (128 to 512 UTF-8 characters) to hash.
+  * @param $setting
+  *   An existing hash or the output of _password_generate_salt().  Must be
+  *   at least 12 characters (the settings and salt).
+@@ -150,6 +150,10 @@ function _password_enforce_log2_boundaries($count_log2) {
+  *   The return string will be truncated at DRUPAL_HASH_LENGTH characters max.
+  */
+ function _password_crypt($algo, $password, $setting) {
++  // Prevent DoS attacks by refusing to hash large passwords.
++  if (strlen($password) > 512) {
++    return FALSE;
++  }
+   // The first 12 characters of an existing hash are its setting string.
+   $setting = substr($setting, 0, 12);
+ 
+diff --git a/includes/session.inc b/includes/session.inc
+index 9589e06..84d1983 100644
+--- a/includes/session.inc
++++ b/includes/session.inc
+@@ -79,7 +79,7 @@ function _drupal_session_read($sid) {
+   // Handle the case of first time visitors and clients that don't store
+   // cookies (eg. web crawlers).
+   $insecure_session_name = substr(session_name(), 1);
+-  if (!isset($_COOKIE[session_name()]) && !isset($_COOKIE[$insecure_session_name])) {
++  if (empty($sid) || (!isset($_COOKIE[session_name()]) && !isset($_COOKIE[$insecure_session_name]))) {
+     $user = drupal_anonymous_user();
+     return '';
+   }
